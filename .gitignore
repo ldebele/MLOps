@@ -2,9 +2,13 @@
 
 data/
 
+
+
 .ipynb_checkpoints/
-.ipynb_checkpoints/
+__pycache__/
 
 models
 
 mlruns/
+
+.env

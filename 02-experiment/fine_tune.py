@@ -11,8 +11,12 @@ from hyperopt.pyll import scope
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 
+from config import db_url
 
-mlflow.set_tracking_uri("postgresql://mlflow_user:user123@localhost:5432/mlflow_db")
+
+MLFLOW_TRACKING_URI = db_url()
+
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 mlflow.set_experiment("nyc-green-taxi-fine-tune-experiment")
 
 
@@ -62,18 +66,8 @@ def load_pickle(filename):
 def opt_parser():
     
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--source", 
-        type=str, 
-        required=True, 
-        help="Location where the processed NYC taxi trip data was saved."
-    )
-    parser.add_argument(
-        "--max_evals", 
-        type=int, 
-        default=50, 
-        help="number of parameter evaluations for the optimizer to explore."
-    )
+    parser.add_argument("--source", type=str, required=True, help="Location where the processed NYC taxi trip data was saved.")
+    parser.add_argument("--max_evals", type=int, default=50, help="number of parameter evaluations for the optimizer to explore.")
 
     return parser.parse_args()
 

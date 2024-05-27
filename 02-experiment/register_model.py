@@ -9,21 +9,24 @@ from mlflow.tracking import MlflowClient
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 
+from config import db_url
 
 
-MLFLOW_TRACKING_URI = "postgresql://mlflow_user:user123@localhost:5432/mlflow_db"
+
+MLFLOW_TRACKING_URI = db_url()
 EXPERIMENT_NAME = "random-forest-best-models"
 RF_PARAMS = ['max_depth', 'n_estimators', 'min_samples_split', 'min_samples_leaf', 'random_state']
 
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 mlflow.set_experiment(EXPERIMENT_NAME)
-# mlflow.sklearn.autolog()
+
 
 
 
 def train_model(params):
 
     with mlflow.start_run():
+    
         for param in RF_PARAMS:
             params[param] = int(params[param])
 
@@ -38,6 +41,8 @@ def train_model(params):
 
         test_rmse = mean_squared_error(y_test, rf.predict(X_test), squared=False)
         mlflow.log_metric("test_rmse", test_rmse)
+
+        mlflow.sklearn.log_model(rf, "random_forest_model")
     
 
 
@@ -45,18 +50,16 @@ def run_register_model(top_n):
 
     client = MlflowClient()
 
-    # # Retrieve the top_n model runs and log the models
-    # experiment = client.get_experiment_by_name("nyc-green-taxi-fine-tune-experiment")
-    # runs = client.search_runs(
-    #                 experiment_ids=experiment.experiment_id,
-    #                 run_view_type=ViewType.ACTIVE_ONLY,
-    #                 max_results=top_n,
-    #                 order_by=["metrics.rmse ASC"])
+    # Retrieve the top_n model runs and log the models
+    experiment = client.get_experiment_by_name("nyc-green-taxi-fine-tune-experiment")
+    runs = client.search_runs(
+                    experiment_ids=experiment.experiment_id,
+                    run_view_type=ViewType.ACTIVE_ONLY,
+                    max_results=top_n,
+                    order_by=["metrics.rmse ASC"])
     
-    # for run in runs:
-    #     train_model(params=run.data.params)
-
-    print("------------------")
+    for run in runs:
+        train_model(params=run.data.params)
 
     # select the model with the lowest test RMSE
     experiment = client.get_experiment_by_name(EXPERIMENT_NAME)
@@ -66,7 +69,6 @@ def run_register_model(top_n):
                     max_results=top_n,
                     order_by=["metrics.rmse ASC"])[0]
     
-    print(best_runs)
        
     # register the best model
     mlflow.register_model(

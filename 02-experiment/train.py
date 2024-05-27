@@ -8,9 +8,15 @@ import mlflow
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 
+from config import db_url
 
-mlflow.set_tracking_uri("postgresql://mlflow_user:user123@localhost:5432/mlflow_db")
+
+MLFLOW_TRACKING_URI = db_url()
+
+
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 mlflow.set_experiment("nyc-green-taxi-experiment")
+mlflow.sklearn.autolog()
 
 
 
@@ -22,8 +28,6 @@ def run(source: str, model_path: str = "./models/"):
     with mlflow.start_run():
 
         mlflow.set_tag("developer", "Lemi")
-
-        mlflow.autolog()
 
         max_depth = 10
         # mlflow.log_param("max_depth", max_depth)
@@ -45,7 +49,7 @@ def run(source: str, model_path: str = "./models/"):
         with open(model_path, "wb") as f:
             pickle.dump(rf, f)
 
-        # mlflow.log_artifact(local_path=model_path, artifact_path="models_pickle")
+        mlflow.log_artifact(local_path=model_path, artifact_path="models_pickle")
             
 
 def load_pickle(filename: str):
