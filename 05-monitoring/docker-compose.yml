@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: grafana_user
+      POSTGRES_PASSWORD: user123
+      POSTGRES_DB: grafana_db
+    ports:
+      - "5432:5432"
+    networks:
+      - back-tier
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8585:80"
+    networks:
+      - back-tier  
+      - front-tier  
+
+  grafana:
+    image: grafana/grafana
+    user: "472"
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./monitoring/grafana_datasources.yaml:/etc/grafana/provisioning/datasources/datasource.yaml:ro
+      - ./monitoring/grafana_dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards/dashboards.yaml:ro
+      - ./monitoring/dashboards:/opt/grafana/dashboards
+    networks:
+      - front-tier
+      - back-tier
+
+
+
+volumes:
+  grafana-data: {}
+
+networks:
+  front-tier:
+  back-tier:
